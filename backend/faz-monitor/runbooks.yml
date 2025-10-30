@@ -1,0 +1,25 @@
+cat > runbooks.yml << 'EOF'
+ips_critical:
+  title: "IPS Critical Event Blocked"
+  steps:
+    - "Validate source reputation on FortiGate: diag ips query {{srcip}}"
+    - "If repeated from same /24, apply temporary block (2h) above policy #{{policyid}}."
+    - "Check for business impact: diagnose sys session list | grep {{dstip}}"
+    - "After 2h, review and remove temp block if clean."
+av_detected:
+  title: "Antivirus Detection"
+  steps:
+    - "Identify host {{dstip}} owner; isolate if needed."
+    - "Check logs for repeated detections; verify AV definitions up to date."
+    - "Run endpoint scan; block malicious hash/domains."
+webfilter_malware:
+  title: "Web Filter Malware/Virus Site"
+  steps:
+    - "Confirm category; ensure policy enforces block for the user group."
+    - "If mass hits, consider temporary DNS block or URL filter."
+generic_investigate:
+  title: "Investigate Security Event"
+  steps:
+    - "Review device {{device}} logs around the timestamp."
+    - "Validate src {{srcip}} and dst {{dstip}} context; confirm policy {{policyid}}."
+EOF

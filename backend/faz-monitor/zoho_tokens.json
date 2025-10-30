@@ -1,0 +1,9 @@
+{
+  "access_token": "1000.26425715a9b30777e99c19fdbd61232c.50dcfba2a82e276c2bb812dd2a464291",
+  "refresh_token": "1000.a03baf89ed803ebcd2c3c4c1e1976aa3.06d3c3e73602f98305fc2840f19a459c",
+  "scope": "Desk.tickets.ALL Desk.contacts.ALL Desk.basic.READ",
+  "api_domain": "https://www.zohoapis.com",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "created_at": 1761675771676
+}
