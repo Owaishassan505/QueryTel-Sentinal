@@ -32,7 +32,41 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Footer Glow Animation */
+@keyframes glowPulse {
+  0% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.4;
+  }
+}
+
+.animate-glow {
+  animation: glowPulse 2.8s infinite ease-in-out;
+}
+
+.recharts-area path {
+  animation: waterflow 6s linear infinite;
+}
+
+@keyframes waterflow {
+  0% {
+    transform: translateX(0px);
+  }
+
+  100% {
+    transform: translateX(-80px);
   }
 }

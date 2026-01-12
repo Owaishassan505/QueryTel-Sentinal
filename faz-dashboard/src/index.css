@@ -1,76 +1,309 @@
+/* =========================================================
+   Tailwind Base
+   ========================================================= */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
+/* =========================================================
+   QueryTel SOC – Unified Dark Theme
+   ========================================================= */
+
+@import "./styles/attackMap.css";
+
+
+:root {
+    --panel: #0f0f12;
+    --card: #17171c;
+    --text: #e9e9ee;
+    --borderColor: rgba(0, 0, 0, 0);
+    /* Transparent, NO BORDER */
+}
+
+/* Body styling */
+body {
+    background: var(--panel);
+    color: var(--text);
+    font-family: "Inter", sans-serif;
+}
+
+/* Panels and Cards */
+.bg-panel {
+    background: var(--panel);
+}
+
+.bg-card {
+    background: var(--card);
+}
+
+.border-borderColor {
+    border-color: var(--borderColor);
+}
+
+/* =========================================================
+   FIX FOR Recharts (Correct + Final)
+   ========================================================= */
+
+/* Let Recharts control colors */
+.recharts-surface path,
+.recharts-sector path,
+.recharts-pie-sector path {
+    fill: inherit !important;
+    stroke: inherit !important;
+}
+
+/* Optional shadow */
+.recharts-sector path {
+    filter: drop-shadow(0px 0px 6px rgba(255, 255, 255, 0.08));
+}
+
+/* =========================================================
+   Stats Boxes (SummaryStats)
+   ========================================================= */
+
+.soc-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 140px;
+    border-radius: 18px;
+    transition: all 0.25s ease-in-out;
+    color: var(--text);
+}
+
+/* Title */
+.soc-title {
+    font-size: 14px;
+    opacity: 0.9;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Value */
+.soc-value {
+    font-size: 34px;
+    font-weight: 700;
+    margin-top: 10px;
+}
+
+/* Gradient Boxes */
+.red-box {
+    background: linear-gradient(135deg, #ff4e4e, #b40202);
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+}
+
+.error-box {
+    background: linear-gradient(135deg, #ff2e2e, #8b0000);
+    box-shadow: 0 0 20px rgba(255, 56, 56, 0.4);
+}
+
+.warning-box {
+    background: linear-gradient(135deg, #ffb300, #ff6f00);
+    box-shadow: 0 0 20px rgba(255, 179, 0, 0.4);
+}
+
+.info-box {
+    background: linear-gradient(135deg, #4c8dff, #003d99);
+    box-shadow: 0 0 20px rgba(76, 141, 255, 0.4);
+}
+
+/* Hover Glow */
+.soc-box:hover {
+    box-shadow: 0 0 35px rgba(255, 255, 255, 0.25);
+    transform: translateY(-3px);
+}
+
+/* =========================================================
+   FINAL FIX — Force Recharts donut slices to show colors
+   ========================================================= */
+
+/* Remove any inherited dark override */
+.recharts-wrapper svg path {
+    fill: unset !important;
+    stroke: unset !important;
+    opacity: 1 !important;
+}
+
+/* Donut slice paths */
+.recharts-pie-sector path,
+.recharts-layer.recharts-pie g path {
+    fill: unset !important;
+    stroke: none !important;
+    opacity: 1 !important;
+}
+
+.apexcharts-donut-series path {
+    filter: drop-shadow(0px 0px 6px rgba(255, 255, 255, 0.25));
+    transition: 0.3s ease;
+}
+
+.apexcharts-donut-series path:hover {
+    filter: drop-shadow(0px 0px 12px rgba(255, 255, 255, 0.9));
+    transform: scale(1.02);
+}
+
+.apexcharts-donut-series path {
+    filter: drop-shadow(0px 0px 6px rgba(255, 255, 255, 0.2));
+    transition: 0.3s ease;
+}
+
+.apexcharts-donut-series path:hover {
+    filter: drop-shadow(0px 0px 14px rgba(255, 255, 255, 0.9));
+    transform: scale(1.03);
+}
+
+.bar-glow {
+    transition: 0.3s;
+}
+
+.bar-glow:hover {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4)) brightness(1.2);
+    transform: scale(1.02);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    width: 0 !important;
+    display: none !important;
+}
+
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none !important;
+}
+
+.hide-scrollbar {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+@keyframes pulse-slow {
+    0% {
+        opacity: 0.9;
     }
 
-    to {
+    50% {
         opacity: 1;
-        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0.9;
     }
 }
 
-.animate-fadeIn {
-    animation: fadeIn 0.25s ease-out forwards;
+.animate-pulse-slow {
+    animation: pulse-slow 3.5s ease-in-out infinite;
 }
 
-.glow {
-    box-shadow: 0 0 25px rgba(0, 120, 255, 0.3);
+.recharts-area path {
+    animation: waterflow 6s linear infinite;
 }
 
-.glow-blue {
-    box-shadow: 0 0 25px rgba(59, 130, 246, 0.35);
-}
-
-.glow-yellow {
-    box-shadow: 0 0 25px rgba(250, 204, 21, 0.35);
-}
-
-.glow-red {
-    box-shadow: 0 0 25px rgba(239, 68, 68, 0.35);
-}
-
-.react-datepicker {
-    background-color: #1f2937 !important;
-    /* dark gray */
-    border: 1px solid #374151 !important;
-    color: #e5e7eb !important;
-}
-
-.react-datepicker__day-name,
-.react-datepicker__day,
-.react-datepicker__time-name {
-    color: #e5e7eb !important;
-}
-
-.react-datepicker__header {
-    background-color: #111827 !important;
-    border-bottom: 1px solid #374151 !important;
-}
-
-.react-datepicker__current-month {
-    color: #93c5fd !important;
-}
-
-.react-datepicker__day--selected {
-    background-color: #3b82f6 !important;
-    color: #fff !important;
-}
-
-@keyframes glow {
-    from {
-        box-shadow: 0 0 0px #0ff;
+@keyframes waterflow {
+    0% {
+        transform: translateX(0px);
     }
 
-    to {
-        box-shadow: 0 0 10px #0ff;
+    100% {
+        transform: translateX(-80px);
     }
 }
 
-.animate-glow {
-    animation: glow 1s ease-in-out alternate infinite;
+.chip-box {
+    @apply px-4 py-2 min-w-[90px] rounded-xl bg-panel/40 backdrop-blur-md border shadow-md transition-all duration-300 hover:scale-105 hover:shadow-xl;
+}
+
+.chip-label {
+    @apply text-[10px] font-semibold tracking-wide;
+}
+
+.chip-value {
+    @apply text-lg font-bold leading-tight;
+}
+
+/* REMOVE ALL BORDERS ACROSS THE UI */
+*,
+.border,
+.border-borderColor,
+.bg-panel,
+.bg-card {
+    border-width: 0 !important;
+    outline: none !important;
+}
+
+/* REMOVE ALL BORDERS COMPLETELY */
+* {
+    border: none !important;
+}
+
+.soc-card {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 15px rgba(0, 255, 170, 0.07);
+}
+
+/* ======================== */
+/* PREMIUM LIVE RADAR STYLE */
+/* ======================== */
+
+.radar-wrapper {
+    width: 260px;
+    height: 260px;
+}
+
+.radar-container {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    position: relative;
+    background: radial-gradient(circle, #001a00 0%, #000 70%);
+    box-shadow: 0 0 25px rgba(0, 255, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.radar-ring {
+    width: 92%;
+    height: 92%;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 255, 0, 0.45);
+    position: absolute;
+}
+
+.radar-sweep {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(rgba(0, 255, 0, 0.25),
+            rgba(0, 255, 0, 0.05),
+            transparent 40%);
+    animation: radar-spin 2.4s linear infinite;
+    position: absolute;
+}
+
+@keyframes radar-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.radar-dot {
+    width: 10px;
+    height: 10px;
+    background: #00ff6a;
+    border-radius: 50%;
+    position: absolute;
+    box-shadow: 0 0 10px #00ff6a;
 }

@@ -1,154 +1,159 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
+    LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from "recharts";
+import { SlidersHorizontal } from "lucide-react";
 
 export default function Analysis() {
-    const [stats, setStats] = useState({
-        info: 0,
-        errors: 0,
-        warnings: 0,
-        total: 0,
-    });
-    const [connected, setConnected] = useState(false);
-    const [trendData, setTrendData] = useState([]);
+    const [summary, setSummary] = useState("Loading AI analysis...");
+    const [timeline, setTimeline] = useState([]);
+    const [filters, setFilters] = useState({});
+    const [results, setResults] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    const token = localStorage.getItem("token");
+
+    const authHeader = {
+        headers: { Authorization: `Bearer ${token}` }
+    };
+
+    // Fetch AI Summary
+    const fetchSummary = async () => {
+        try {
+            const res = await axios.get("/api/analysis/summary", authHeader);
+            setSummary(res.data.summary || "No summary.");
+        } catch (err) {
+            console.error("AI Summary Error:", err);
+            setSummary("Failed to load summary.");
+        }
+    };
+
+    // Fetch timeline
+    const fetchTimeline = async () => {
+        try {
+            const res = await axios.get("/logs/timeseries", authHeader);
+
+            // Ensure it's an array
+            if (Array.isArray(res.data)) {
+                // Map to recharts-compatible format
+                const parsed = res.data.map(item => ({
+                    ts: item.time || item.time || "",
+                    errors: item.errors || 0,
+                    warnings: item.warnings || 0,
+                    info: item.info || 0
+                }));
+                setTimeline(parsed);
+            } else {
+                console.error("Timeline is NOT array:", res.data);
+                setTimeline([]);
+            }
+
+        } catch (err) {
+            console.error("Timeline Error:", err);
+            setTimeline([]);
+        }
+    };
+
+    // Apply filters
+    const applyFilters = async () => {
+        setLoading(true);
+        try {
+            const res = await axios.post("/api/analysis/filter", filters, authHeader);
+            setResults(res.data.results || []);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const res = await fetch("http://10.106.87.146:3320/logs/stats");
-                if (!res.ok) throw new Error("Network response not ok");
-                const data = await res.json();
-                setStats(data);
-                setConnected(true);
-
-                // Append or refresh trend chart data
-                setTrendData((prev) => {
-                    const now = new Date().toLocaleTimeString();
-                    const newPoint = {
-                        time: now,
-                        info: data.info,
-                        errors: data.errors,
-                        warnings: data.warnings,
-                    };
-                    const updated = [...prev, newPoint];
-                    return updated.slice(-10); // keep last 10 points
-                });
-            } catch (err) {
-                console.error("❌ Failed to fetch stats:", err);
-                setConnected(false);
-            }
-        };
-
-        fetchStats();
-        const interval = setInterval(fetchStats, 5000);
-        return () => clearInterval(interval);
+        fetchSummary();
+        fetchTimeline();
     }, []);
 
     return (
-        <div className="p-6 text-white">
-            <h1 className="text-2xl font-bold mb-6">📊 Log Analysis</h1>
+        <div className="p-6 space-y-8">
+            {/* AI SUMMARY */}
+            <div className="bg-gray-900 p-6 rounded-2xl shadow-xl border border-gray-700">
+                <h2 className="text-xl font-bold mb-2 text-white">AI Investigation Summary</h2>
+                <p className="text-gray-300 whitespace-pre-line">{summary}</p>
+            </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                <div className="bg-gray-800 p-6 rounded-lg text-center shadow-md border border-gray-700">
-                    <h3 className="text-blue-400 font-semibold text-lg">Information Logs</h3>
-                    <p className="text-3xl font-bold mt-2">{stats.info}</p>
-                </div>
-                <div className="bg-gray-800 p-6 rounded-lg text-center shadow-md border border-gray-700">
-                    <h3 className="text-red-400 font-semibold text-lg">Error Logs</h3>
-                    <p className="text-3xl font-bold mt-2">{stats.errors}</p>
-                </div>
-                <div className="bg-gray-800 p-6 rounded-lg text-center shadow-md border border-gray-700">
-                    <h3 className="text-yellow-400 font-semibold text-lg">Warning Logs</h3>
-                    <p className="text-3xl font-bold mt-2">{stats.warnings}</p>
-                </div>
-                <div className="bg-gray-800 p-6 rounded-lg text-center shadow-md border border-gray-700">
-                    <h3 className="text-green-400 font-semibold text-lg">Total Logs</h3>
-                    <p className="text-3xl font-bold mt-2">{stats.total}</p>
+            {/* TIMELINE */}
+            <div className="bg-gray-900 p-6 rounded-2xl shadow-xl border border-gray-700">
+                <h2 className="text-xl font-bold mb-4 text-white">Threat Timeline</h2>
+                <div className="h-64">
+                    <ResponsiveContainer>
+                        <LineChart data={timeline}>
+                            <XAxis dataKey="ts" tick={{ fill: "#aaa" }} />
+                            <YAxis />
+                            <Tooltip />
+                            <Line type="monotone" dataKey="errors" stroke="#ff4444" strokeWidth={2} />
+                            <Line type="monotone" dataKey="warnings" stroke="#ffbb33" strokeWidth={2} />
+                            <Line type="monotone" dataKey="info" stroke="#33b5e5" strokeWidth={2} />
+                        </LineChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
 
-            {/* Total */}
-            <div className="text-center text-gray-400 mb-6">
-                Status:{" "}
-                {connected ? (
-                    <span className="text-green-400 font-semibold">🟢 Connected</span>
+            {/* FILTER PANEL */}
+            <div className="bg-gray-900 p-6 rounded-2xl shadow-xl border border-gray-700">
+                <h2 className="text-xl font-bold mb-4 text-white flex items-center">
+                    <SlidersHorizontal className="mr-2" /> Deep Search Filters
+                </h2>
+
+                <div className="grid grid-cols-3 gap-4">
+                    <input placeholder="Severity" className="p-2 bg-gray-800 rounded text-white"
+                        onChange={(e) => setFilters({ ...filters, severity: e.target.value })} />
+
+                    <input placeholder="Category" className="p-2 bg-gray-800 rounded text-white"
+                        onChange={(e) => setFilters({ ...filters, category: e.target.value })} />
+
+                    <input placeholder="Device" className="p-2 bg-gray-800 rounded text-white"
+                        onChange={(e) => setFilters({ ...filters, device: e.target.value })} />
+
+                    <input placeholder="Source Country" className="p-2 bg-gray-800 rounded text-white"
+                        onChange={(e) => setFilters({ ...filters, srcCountry: e.target.value })} />
+
+                    <input placeholder="Destination Country" className="p-2 bg-gray-800 rounded text-white"
+                        onChange={(e) => setFilters({ ...filters, dstCountry: e.target.value })} />
+
+                    <input type="datetime-local" className="p-2 bg-gray-800 rounded text-white"
+                        onChange={(e) => setFilters({ ...filters, start: e.target.value })} />
+
+                    <input type="datetime-local" className="p-2 bg-gray-800 rounded text-white"
+                        onChange={(e) => setFilters({ ...filters, end: e.target.value })} />
+                </div>
+
+                <button onClick={applyFilters}
+                    className="mt-4 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
+                    Apply Filters
+                </button>
+            </div>
+
+            {/* RESULTS */}
+            <div className="bg-gray-900 p-6 rounded-2xl shadow-xl border border-gray-700">
+                <h2 className="text-xl font-bold mb-4 text-white">Filter Results</h2>
+
+                {loading ? (
+                    <p className="text-gray-400">Loading...</p>
                 ) : (
-                    <span className="text-red-400 font-semibold">🔴 Disconnected</span>
+                    <div className="space-y-2">
+                        {results.map((log, idx) => (
+                            <div key={idx}
+                                className="p-3 bg-gray-800 rounded-lg text-gray-300 border border-gray-700">
+                                <div className="flex justify-between">
+                                    <span>{log.ts}</span>
+                                    <span className="px-2 py-1 rounded bg-gray-700">{log.severity}</span>
+                                </div>
+                                <p className="mt-1">{log.message}</p>
+                                <p className="text-sm text-gray-500">
+                                    {log.deviceName} → {log.sourceIp} → {log.destIp}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
                 )}
-                <br />
-                Total logs processed:{" "}
-                <strong className="text-white">{stats.total}</strong>
-            </div>
-
-            {/* Trend Graphs */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Error Trend */}
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-md">
-                    <h3 className="text-red-400 font-semibold mb-3">Error Trend</h3>
-                    <ResponsiveContainer width="100%" height={200}>
-                        <LineChart data={trendData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                            <XAxis dataKey="time" stroke="#9ca3af" />
-                            <YAxis stroke="#9ca3af" />
-                            <Tooltip contentStyle={{ backgroundColor: "#1f2937", borderColor: "#374151" }} />
-                            <Line
-                                type="monotone"
-                                dataKey="errors"
-                                stroke="#f87171"
-                                strokeWidth={2}
-                                dot={{ r: 3 }}
-                            />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
-
-                {/* Warning Trend */}
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-md">
-                    <h3 className="text-yellow-400 font-semibold mb-3">Warning Trend</h3>
-                    <ResponsiveContainer width="100%" height={200}>
-                        <LineChart data={trendData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                            <XAxis dataKey="time" stroke="#9ca3af" />
-                            <YAxis stroke="#9ca3af" />
-                            <Tooltip contentStyle={{ backgroundColor: "#1f2937", borderColor: "#374151" }} />
-                            <Line
-                                type="monotone"
-                                dataKey="warnings"
-                                stroke="#facc15"
-                                strokeWidth={2}
-                                dot={{ r: 3 }}
-                            />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
-
-                {/* Info Trend */}
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-md">
-                    <h3 className="text-blue-400 font-semibold mb-3">Info Trend</h3>
-                    <ResponsiveContainer width="100%" height={200}>
-                        <LineChart data={trendData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                            <XAxis dataKey="time" stroke="#9ca3af" />
-                            <YAxis stroke="#9ca3af" />
-                            <Tooltip contentStyle={{ backgroundColor: "#1f2937", borderColor: "#374151" }} />
-                            <Line
-                                type="monotone"
-                                dataKey="info"
-                                stroke="#60a5fa"
-                                strokeWidth={2}
-                                dot={{ r: 3 }}
-                            />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
             </div>
         </div>
     );

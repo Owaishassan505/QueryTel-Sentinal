@@ -1,193 +1,301 @@
-import React, { useEffect, useState } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { io } from "socket.io-client";
 
-export default function LogDashboard() {
-    const [stats, setStats] = useState({ info: 0, errors: 0, warnings: 0, total: 0 });
-    const [timeseries, setTimeseries] = useState([]);
-    const [logs, setLogs] = useState([]);
-    const [severityFilter, setSeverityFilter] = useState("All");
-    const [searchQuery, setSearchQuery] = useState("");
+// CHARTS
+import SeverityDonut from "../components/charts/SeverityDonut";
+import TrendLineChart from "../components/charts/TrendLineChart";
+import AlertTypesPie from "../components/charts/AlertTypesPie";
+import CountryBarChart from "../components/charts/CountryBarChart";
+import MostActiveDevicesChart from "../components/charts/MostActiveDevicesChart";
+import TopDestinationCountries from "../components/charts/TopDestinationCountries";
 
+// WIDGETS
+import SystemHealthChips from "../components/widgets/SystemHealthChips";
+import RealTimeThreatList from "../components/widgets/RealTimeThreatList";
+import LiveThreatRadar from "../components/widgets/LiveThreatRadar";
+import GlowStatChips from "../components/widgets/GlowStatChips";
+import CategoryCounters from "../components/widgets/CategoryCounters";
 
+// TABLES
+import LogsTableV2 from "../components/tables/LogsTableV2";
 
-    useEffect(() => {
-        const fetchAll = async () => {
-            const start = performance.now();
+// Animation
+import { motion } from "framer-motion";
+import CountUp from "react-countup";
 
-            const [statsRes, timeseriesRes, logsRes, healthRes] = await Promise.all([
-                fetch("http://10.106.87.146:3320/logs/stats"),
-                fetch("http://10.106.87.146:3320/logs/timeseries"),
-                fetch("http://10.106.87.146:3320/logs"),
-                fetch("http://10.106.87.146:3320/api/health"),
-            ]);
+export default function Dashboard({ logs = [], stats = {}, chartData = [] }) {
 
-            const [statsData, timeseriesData, logsData, healthData] = await Promise.all([
-                statsRes.json(),
-                timeseriesRes.json(),
-                logsRes.json(),
-                healthRes.json(),
-            ]);
-
-            setStats(statsData);
-            setTimeseries(timeseriesData);
-            setLogs(logsData.logs || logsData);
-            setSystemHealth(healthData);
-
-            const end = performance.now();
-            setLatency(Math.round(end - start));
-            setLastSync(new Date());
-        };
-
-        fetchAll(); // initial load
-
-        let interval;
-        if (autoRefresh) {
-            interval = setInterval(fetchAll, 15000); // 15 s refresh
-        }
-        return () => clearInterval(interval);
-    }, [autoRefresh]);
-
-
-    const filteredLogs = logs.filter((log) => {
-        const matchSeverity =
-            severityFilter === "All" || log.severity?.toLowerCase() === severityFilter.toLowerCase();
-        const matchSearch = log.message?.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchSeverity && matchSearch;
+    /* ===============================
+       LIVE STATE (ADDED – REQUIRED)
+    ================================ */
+    const [liveLogs, setLiveLogs] = useState([]);
+    const [liveStats, setLiveStats] = useState({
+        total: 0,
+        errors: 0,
+        warnings: 0,
+        info: 0,
     });
 
-    const renderChart = (label, color, key) => (
-        <div className="bg-gray-800 p-4 rounded-lg shadow-md w-full">
-            <h3 className="font-semibold mb-2" style={{ color }}>
-                {label}
-            </h3>
-            {timeseries.length > 0 ? (
-                <ResponsiveContainer width="100%" height={200}>
-                    <LineChart data={timeseries}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                        <XAxis
-                            dataKey="time"
-                            tick={{ fill: "#aaa", fontSize: 12 }}
-                            tickFormatter={(t) =>
-                                new Date(t).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-                            }
-                        />
-                        <YAxis stroke="#aaa" />
-                        <Tooltip />
-                        <Line type="monotone" dataKey={key} stroke={color} strokeWidth={2} dot={false} />
-                    </LineChart>
-                </ResponsiveContainer>
-            ) : (
-                <p className="text-gray-400">No data available</p>
-            )}
-        </div>
-    );
+    const [filteredLogs, setFilteredLogs] = useState([]);
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [categoryFilter, setCategoryFilter] = useState(null);
+    const [countryFilter, setCountryFilter] = useState(null);
+    const [topCountries, setTopCountries] = useState([]);
+    const [statsState, setStatsState] = useState({});
 
+    /* ===============================
+       INITIAL REST FETCH (KEEP)
+    ================================ */
+    useEffect(() => {
+        axios.get("/api/logs/stats")
+            .then(res => {
+                const api = res.data;
+
+                const severity = {
+                    critical: api.errors || 0,
+                    high: api.warnings || 0,
+                    medium: api.info || 0,
+                    low: 0,
+                };
+
+                const alertTypes = [
+                    { type: "General", count: api.general || 0 },
+                    { type: "App Control", count: api.application || 0 },
+                    { type: "Antivirus", count: api.antivirus || 0 },
+                    { type: "DNS", count: api.dns || 0 },
+                    { type: "IPS", count: api.ips || 0 },
+                    { type: "SSL", count: api.ssl || 0 },
+                    { type: "Failed Login", count: api.failedLogin || 0 },
+                    { type: "VPN", count: api.vpn || 0 },
+                    { type: "Admin Access", count: api.adminAccess || 0 },
+                ];
+
+                setStatsState({ severity, alertTypes });
+            })
+            .catch(err => console.error("Stats fetch error:", err));
+    }, []);
+
+    /* ===============================
+       SOCKET.IO — LIVE ENGINE
+    ================================ */
+    useEffect(() => {
+        const socket = io("https://sentinel.itcold.com", {
+            transports: ["websocket"],
+            reconnection: true,
+        });
+
+        // LIVE STATS
+        socket.on("stats:update", (s) => {
+            setLiveStats(s);
+
+            setStatsState(prev => ({
+                ...prev,
+                total: s.total,
+                errors: s.errors,
+                warnings: s.warnings,
+                info: s.info,
+                general: s.general ?? prev.general,
+                application: s.application ?? prev.application,
+                antivirus: s.antivirus ?? prev.antivirus,
+                dns: s.dns ?? prev.dns,
+                ssl: s.ssl ?? prev.ssl,
+                ips: s.ips ?? prev.ips,
+                failedLogin: s.failedLogin ?? prev.failedLogin,
+                vpn: s.vpn ?? prev.vpn,
+                adminAccess: s.adminAccess ?? prev.adminAccess,
+
+                severity: {
+                    critical: s.errors || 0,
+                    high: s.warnings || 0,
+                    medium: s.info || 0,
+                    low: 0,
+                }
+            }));
+        });
+
+        // LIVE LOG STREAM
+        socket.on("alert:batch", (batch) => {
+            setLiveLogs(prev =>
+                [...batch.reverse(), ...prev].slice(0, 300)
+            );
+        });
+
+        return () => socket.disconnect();
+    }, []);
+
+    /* ===============================
+       FILTER HANDLERS (UNCHANGED)
+    ================================ */
+    const handleCounterClick = async (key) => {
+        let filter = {};
+
+        if (key === "total") {
+            const res = await axios.post("/api/analysis/filter", {});
+            setFilteredLogs(res.data.results);
+            setDrawerOpen(true);
+            return;
+        }
+
+        if (key === "errors") filter.severity = "error";
+        if (key === "warnings") filter.severity = "warning";
+        if (key === "info") filter.severity = "info";
+
+        const categories = {
+            general: "General Traffic",
+            application: "Application Control",
+            antivirus: "Antivirus",
+            dns: "DNS",
+            ssl: "SSL",
+            ips: "IPS",
+            failedLogin: "Failed Login",
+            vpn: "VPN",
+            adminAccess: "Admin Access",
+        };
+
+        if (categories[key]) filter.category = categories[key];
+
+        const res = await axios.post("/api/analysis/filter", filter);
+        setFilteredLogs(res.data.results);
+        setDrawerOpen(true);
+    };
+
+    const handleCountryFilter = (country) => {
+        axios.post("/api/analysis/filter", { dstCountry: country }).then(res => {
+            setFilteredLogs(res.data.results);
+            setDrawerOpen(true);
+        });
+    };
+
+    const handleCountryBarClick = (country) => {
+        axios.post("/api/analysis/filter", { srcCountry: country }).then(res => {
+            setFilteredLogs(res.data.results);
+            setDrawerOpen(true);
+        });
+    };
+
+
+
+    /* ===============================
+       LOG DRAWER (UNCHANGED)
+    ================================ */
+    const LogDrawer = ({ open, onClose, logs }) => {
+        const [page, setPage] = useState(1);
+        const perPage = 10;
+        if (!open) return null;
+
+        const totalPages = Math.ceil(logs.length / perPage);
+        const start = (page - 1) * perPage;
+        const visible = logs.slice(start, start + perPage);
+
+        return (
+            <div className="fixed inset-0 bg-black/60 flex justify-end z-[9999]">
+                <div className="w-[480px] h-full bg-[#0f0f11] border-l border-gray-800 flex flex-col">
+                    <div className="p-4 border-b border-gray-800 flex justify-between">
+                        <h2 className="text-white font-semibold">
+                            Filtered Logs ({logs.length})
+                        </h2>
+                        <button onClick={onClose} className="text-red-400 text-xl">✕</button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                        {visible.map((log, i) => (
+                            <div key={i} className="bg-[#1a1a1c] p-4 rounded border border-gray-700">
+                                <div
+                                    className="text-gray-300 text-sm"
+                                    dangerouslySetInnerHTML={{
+                                        __html: log.humanMessage
+                                            ?.replace(/\n/g, "<br>")
+                                            ?.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                                    }}
+                                />
+                                <div className="text-xs text-gray-500 mt-2">
+                                    {log.sourceIp} → {log.destIp}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    /* ===============================
+       TOP COUNTRIES (KEEP)
+    ================================ */
+    useEffect(() => {
+        axios.get("/api/top-countries").then(res => {
+            if (res.data.ok) setTopCountries(res.data.data);
+        });
+    }, []);
+
+
+
+    /* ===============================
+       RENDER
+    ================================ */
     return (
-        <div className="p-6 text-white">
-            <h1 className="text-2xl font-bold mb-6">📊 QueryTel SOC Dashboard</h1>
+        <div className="pt-2 pb-4">
+            <GlowStatChips stats={statsState} />
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                <div className="bg-gray-800 p-6 rounded-lg text-center shadow-md">
-                    <h3 className="text-blue-400 font-semibold text-lg">Information Logs</h3>
-                    <p className="text-3xl font-bold mt-2">{stats.info}</p>
+            <div className="grid grid-cols-12 gap-4 mt-6">
+
+                <div className="col-span-12 lg:col-span-6 bg-panel p-4 rounded-xl">
+                    <h2 className="mb-3 font-semibold">Threat Trend</h2>
+                    <TrendLineChart logs={liveLogs} />
                 </div>
-                <div className="bg-gray-800 p-6 rounded-lg text-center shadow-md">
-                    <h3 className="text-red-400 font-semibold text-lg">Error Logs</h3>
-                    <p className="text-3xl font-bold mt-2">{stats.errors}</p>
+
+                <div className="col-span-12 lg:col-span-6 grid grid-cols-12 gap-4">
+
+                    <div className="col-span-4 bg-panel p-4 rounded-xl text-center">
+                        <h2 className="mb-2 font-semibold">Alert Types</h2>
+                        <AlertTypesPie data={statsState.alertTypes || []} />
+                    </div>
+
+                    <div className="col-span-4 bg-panel p-4 rounded-xl text-center">
+                        <h2 className="mb-2 font-semibold">Severity</h2>
+                        <SeverityDonut stats={statsState.severity || {}} />
+                    </div>
+
+                    <div className="col-span-4 bg-panel p-4 rounded-xl text-center">
+                        <h2 className="mb-2 font-semibold text-red-400">Live Threat Radar</h2>
+                        <LiveThreatRadar />
+                    </div>
+
                 </div>
-                <div className="bg-gray-800 p-6 rounded-lg text-center shadow-md">
-                    <h3 className="text-yellow-400 font-semibold text-lg">Warning Logs</h3>
-                    <p className="text-3xl font-bold mt-2">{stats.warnings}</p>
+
+                <div className="col-span-12 md:col-span-6 bg-panel p-4 rounded-xl">
+                    <h2 className="mb-2 font-semibold">Most Active Devices</h2>
+                    <MostActiveDevicesChart />
                 </div>
-                <div className="bg-gray-800 p-6 rounded-lg text-center shadow-md">
-                    <h3 className="text-green-400 font-semibold text-lg">Total Logs</h3>
-                    <p className="text-3xl font-bold mt-2">{stats.total}</p>
+
+                <div className="col-span-12 md:col-span-6 bg-panel p-4 rounded-xl">
+                    <h2 className="mb-2 font-semibold">Top Destination Countries</h2>
+                    <TopDestinationCountries onSelectCountry={handleCountryFilter} />
                 </div>
+
             </div>
 
-            {/* Charts */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                {renderChart("Error Trend", "#ef4444", "errors")}
-                {renderChart("Warning Trend", "#facc15", "warnings")}
-                {renderChart("Info Trend", "#3b82f6", "info")}
+            <div className="bg-panel p-4 rounded-xl mt-6">
+                <h2 className="mb-2 font-semibold">Top Countries</h2>
+                <CountryBarChart data={topCountries} onCountrySelect={handleCountryBarClick} />
             </div>
 
-            {/* Filters Section */}
-            <div className="bg-gray-900 p-4 rounded-lg mb-4 border border-gray-700">
-                <h3 className="text-lg font-semibold mb-3">🔍 Filters & Search</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <select
-                        className="bg-gray-800 text-white p-2 rounded-md"
-                        value={severityFilter}
-                        onChange={(e) => setSeverityFilter(e.target.value)}
-                    >
-                        <option>All</option>
-                        <option>Error</option>
-                        <option>Warning</option>
-                        <option>Info</option>
-                    </select>
-                    <input
-                        type="text"
-                        placeholder="Search logs..."
-                        className="bg-gray-800 text-white p-2 rounded-md"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <button
-                        onClick={() => {
-                            setSeverityFilter("All");
-                            setSearchQuery("");
-                        }}
-                        className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
-                    >
-                        Reset
-                    </button>
-                </div>
+            <div className="bg-panel p-4 rounded-xl mt-6">
+                <h2 className="mb-2 font-semibold">Latest Logs (LIVE)</h2>
+                <LogsTableV2
+                    logs={liveLogs}
+                    categoryFilter={categoryFilter}
+                    countryFilter={countryFilter}
+                />
             </div>
 
-            {/* Recent Logs */}
-            <div className="bg-gray-900 p-4 rounded-lg border border-gray-700">
-                <h3 className="text-lg font-semibold mb-3">🕒 Recent Logs</h3>
-                <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm text-gray-300">
-                        <thead>
-                            <tr className="text-gray-400 border-b border-gray-700">
-                                <th className="p-2 text-left">Time</th>
-                                <th className="p-2 text-left">Severity</th>
-                                <th className="p-2 text-left">Message</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredLogs.slice(0, 20).map((log, i) => (
-                                <tr key={i} className="border-b border-gray-800 hover:bg-gray-800/50">
-                                    <td className="p-2">{new Date(log.ts).toLocaleString()}</td>
-                                    <td className="p-2">
-                                        <span
-                                            className={`px-2 py-1 rounded text-xs font-semibold ${log.severity === "error"
-                                                ? "bg-red-500/20 text-red-400"
-                                                : log.severity === "warning"
-                                                    ? "bg-yellow-500/20 text-yellow-400"
-                                                    : "bg-blue-500/20 text-blue-400"
-                                                }`}
-                                        >
-                                            {log.severity}
-                                        </span>
-                                    </td>
-                                    <td className="p-2 whitespace-nowrap">{log.message}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <LogDrawer
+                open={drawerOpen}
+                logs={filteredLogs}
+                onClose={() => setDrawerOpen(false)}
+            />
         </div>
     );
 }
-import AIThreatInsights from "./AIThreatInsights";
 
-// Inside JSX:
-<div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-    <AIThreatInsights />
-    {/* Other components */}
-</div>

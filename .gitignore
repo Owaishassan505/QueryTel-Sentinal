@@ -1,18 +1,42 @@
-# Node.js
+# Node
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env
 .env
-logs/
-*.log
+.env.*
+*.secret
+zoho_tokens.json
 
-# Python virtual environment
-llama-env/
-__pycache__/
-*.pyc
-
-# Build outputs
+# Build
 dist/
 build/
+coverage/
 
-# System
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# OS / Editor
 .DS_Store
-Thumbs.db
+.idea/
+.vscode/
+
+# Logs
+*.log
+*.pid
+
+# React
+.faz-dashboard@*
+react-scripts/
+
+# Leaflet / assets cache
+public/leaflet/
+public/textures/
+
+# Test artifacts
+.nyc_output/

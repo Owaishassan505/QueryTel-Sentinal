@@ -1,44 +1,76 @@
-import React, { useState, useMemo } from "react";
-import LogsTable from "../components/LogsTable";
-import LogsLayout from "../components/LogsLayout";
-import { exportToCSV, exportToPDF } from "../utils/exportUtils";
+import React, { useState, useEffect } from "react";
+import { apiFetch } from "../api/api";
+import LogTable from "../components/tables/LogTable";
 
-export default function InfoLogs({ logs = [] }) {
-    const [paused, setPaused] = useState(false);
+export default function InfoLogs() {
+    const [logs, setLogs] = useState([]);
+    const [loading, setLoading] = useState(true);
+
     const [search, setSearch] = useState("");
 
-    const filtered = useMemo(() => {
-        const filteredLogs = logs.filter(
-            (log) =>
-                (log.severity || log.event?.severity || "").toLowerCase() === "info"
-        );
-        if (!search) return filteredLogs;
-        return filteredLogs.filter((log) =>
-            JSON.stringify(log).toLowerCase().includes(search.toLowerCase())
-        );
-    }, [logs, search]);
+    const loadLogs = async () => {
+        setLoading(true);
 
-    const exportData = filtered.map((l) => ({
-        Timestamp: new Date(l.ts || l.time).toLocaleString(),
-        Severity: l.severity || l.event?.severity,
-        Source: l.parsed?.srcip || "-",
-        Destination: l.parsed?.dstip || "-",
-        Action: l.parsed?.action || "-",
-        Message: l.message || "-",
-    }));
+        const { ok, data } = await apiFetch("/api/logs/info");
+
+        if (!ok || !Array.isArray(data)) {
+            console.error("Failed to fetch info logs");
+            setLogs([]);
+        } else {
+            setLogs(data);
+        }
+
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        loadLogs();
+    }, []);
+
+    // 🔍 FILTER LOGS CLIENT-SIDE
+    const filteredLogs = logs.filter((l) => {
+        const s = search.toLowerCase();
+
+        return (
+            (l.deviceName || "").toLowerCase().includes(s) ||
+            (l.sourceIp || l.source_ip || "").toLowerCase().includes(s) ||
+            (l.destIp || l.dest_ip || "").toLowerCase().includes(s) ||
+            (l.message || "").toLowerCase().includes(s) ||
+            (l.raw || "").toLowerCase().includes(s)
+        );
+    });
 
     return (
-        <LogsLayout
-            title="ℹ️ Information Logs"
-            color="text-blue-400"
-            paused={paused}
-            setPaused={setPaused}
-            search={search}
-            setSearch={setSearch}
-            onExportCSV={() => exportToCSV(exportData, "info_logs.csv")}
-            onExportPDF={() => exportToPDF(exportData, "info_logs.pdf")}
-        >
-            <LogsTable logs={paused ? [] : filtered} />
-        </LogsLayout>
+        <div className="space-y-4">
+            {/* HEADER */}
+            <div className="flex items-center justify-between">
+                <h1 className="text-xl font-bold text-gray-100">Info Logs</h1>
+
+                <button
+                    className="px-4 py-2 bg-primary text-white rounded-lg shadow-md hover:bg-primary/80"
+                    onClick={loadLogs}
+                >
+                    Refresh
+                </button>
+            </div>
+
+            {/* 🔍 SEARCH BAR */}
+            <div className="flex mb-3">
+                <input
+                    type="text"
+                    placeholder="Search logs..."
+                    className="px-3 py-2 w-72 bg-black/40 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-primary outline-none"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+            </div>
+
+            {/* TABLE */}
+            {loading ? (
+                <div className="text-gray-300 text-center py-10">Loading logs...</div>
+            ) : (
+                <LogTable logs={filteredLogs} />
+            )}
+        </div>
     );
 }

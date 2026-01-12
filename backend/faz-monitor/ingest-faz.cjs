@@ -4,6 +4,9 @@ const readline = require('readline');
 const { MongoClient } = require('mongodb');
 const { spawn } = require('child_process');
 
+// ⭐ ADD THIS LINE
+const geoip = require("geoip-lite");
+
 const LOG_FILE = '/var/log/faz/faz.log';
 
 // Use Atlas URI from .env
@@ -48,6 +51,14 @@ function parseKeyValue(line) {
 
         if (doc.severity) {
           doc.severity = doc.severity.toLowerCase();
+        }
+
+        // ⭐ ADD COUNTRY LOOKUP HERE
+        if (doc.srcip) {
+          const lookup = geoip.lookup(doc.srcip);
+          doc.country = lookup?.country || "Unknown";
+        } else {
+          doc.country = "Unknown";
         }
 
         console.log("[ingest] New log line parsed:", doc);
