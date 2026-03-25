@@ -55,13 +55,11 @@ async function findOrCreateContact(accessToken, { email, lastName = "User", firs
 // === Main Function ===
 export async function createZohoTicket(userName, userEmail, message) {
   try {
-    const tokens = getTokens();
-    if (!tokens || !tokens.access_token) {
-      console.log("⚠️ Zoho access token missing");
-      return "❌ Unable to create ticket — missing Zoho access token.";
-    }
-
     const accessToken = await getAccessToken();
+    if (!accessToken) {
+      console.log("⚠️ Zoho access token could not be retrieved");
+      return "❌ Unable to create ticket — Zoho authentication failed.";
+    }
     const contact = await findOrCreateContact(accessToken, {
       email: userEmail,
       lastName: userName,
@@ -113,5 +111,42 @@ export async function createZohoTicket(userName, userEmail, message) {
       return `❌ Zoho API Error: ${JSON.stringify(err.response.data, null, 2)}`;
     }
     return `❌ Error creating Zoho ticket: ${err.message}`;
+  }
+}
+
+/**
+ * List tickets from Zoho Desk
+ */
+export async function listZohoTickets(params = {}) {
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      console.log("⚠️ Zoho access token could not be retrieved");
+      return { error: "Zoho authentication failed" };
+    }
+
+    const { limit = 50, from = 0, status = "all" } = params;
+
+    // Construct query params
+    let url = `${DESK_BASE}/tickets?limit=${limit}&from=${from}&departmentId=${DEPT_ID}`;
+    if (status !== "all") {
+      url += `&status=${status}`;
+    }
+
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Zoho-oauthtoken ${accessToken}`,
+        orgId: ORG_ID,
+      },
+    });
+
+    return {
+      tickets: response.data.data || [],
+      count: response.data.data?.length || 0
+    };
+  } catch (err) {
+    const detail = err.response?.data || err.message;
+    console.error("❌ Zoho List Tickets Error:", JSON.stringify(detail, null, 2));
+    throw new Error(err.response?.data?.message || err.message);
   }
 }

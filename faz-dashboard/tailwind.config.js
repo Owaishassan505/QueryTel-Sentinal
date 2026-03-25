@@ -7,25 +7,26 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Fluent UI Soft Colors
-        primary: "#4F6BED",
-        primarySoft: "#7287F5",
-        card: "#1E1F24",
-        panel: "#141416",
-        borderColor: "#2A2B2F",
+        'brand-dark': '#0f172a',
+        'brand-primary': '#3b82f6',
+        'brand-secondary': '#64748b',
+        'status-error': '#ef4444',
+        'status-warning': '#f59e0b',
+        'status-success': '#10b981',
+        'status-info': '#3b82f6',
 
-        // Severity Colors
-        severity: {
-          info: "#3B82F6",
-          warning: "#FBBF24",
-          error: "#EF4444",
-        }
+        // Legacy colors kept for compatibility
+        primaryLink: "#4F6BED",
+        card: "#ffffff",
+        panel: "#f8fafc",
+        borderColor: "#e2e8f0",
       },
       boxShadow: {
-        soft: "0 4px 10px rgba(0,0,0,0.25)",
-        glow: "0 0 8px rgba(79,107,237, .5)",
+        soft: "0 4px 10px rgba(0,0,0,0.05)",
+        glow: "0 0 8px rgba(79,107,237, .2)",
       },
     },
   },
   plugins: [],
 };
+

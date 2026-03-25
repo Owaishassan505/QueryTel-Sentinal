@@ -9,6 +9,7 @@ import {
     Tooltip,
     ResponsiveContainer
 } from "recharts";
+import { Globe, ShieldAlert, ArrowRight, Activity } from "lucide-react";
 
 export default function DarkwebIntelligence() {
     const [headlines, setHeadlines] = useState([]);
@@ -169,114 +170,143 @@ export default function DarkwebIntelligence() {
     }, []);
 
     return (
-        <div className="p-6 space-y-10">
+        <div className="space-y-10 animate-in fade-in duration-500">
             {/* ---- TITLE ---- */}
-            <h1 className="text-3xl font-bold text-white">Darkweb Intelligence</h1>
+            <div className="flex items-center gap-4">
+                <div className="p-3 bg-red-500/10 rounded-2xl border border-red-500/20">
+                    <Globe className="w-8 h-8 text-red-500 animate-pulse" />
+                </div>
+                <div>
+                    <h1 className="text-3xl font-black text-white italic uppercase tracking-tighter">Darkweb Intelligence</h1>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] mt-1">Global Breach & Leak Monitoring</p>
+                </div>
+            </div>
 
             {/* ---- SUMMARY ---- */}
             {intel && (
-                <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700 shadow-lg">
-                    <h2 className="text-xl font-bold text-white mb-2">AI Summary</h2>
-                    <p className="text-gray-300">{intel.summary}</p>
+                <div className="bg-[#0f172a]/80 backdrop-blur-xl p-8 rounded-[2rem] border border-slate-800 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-2 h-full bg-blue-500/20 group-hover:bg-blue-500 transition-colors"></div>
+                    <h2 className="text-xl font-black text-white mb-4 uppercase tracking-tighter italic">AI Analysis Report</h2>
+                    <p className="text-slate-300 leading-relaxed font-medium">{intel.summary}</p>
                 </div>
             )}
 
-            <ThreatScoreWidget score={score} />
-
-            {/* ---- CHART ---- */}
-            {intel && (
-                <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700 shadow-lg">
-                    <h2 className="text-xl font-bold text-white mb-4">Breach Activity by Source</h2>
-                    <div className="h-72">
-                        <ResponsiveContainer>
-                            <BarChart data={intel.chartData}>
-                                <XAxis dataKey="source" tick={{ fill: "#bbb" }} />
-                                <YAxis />
-                                <Tooltip />
-                                <Bar dataKey="breaches" fill="#ff4444" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="lg:col-span-4">
+                    <ThreatScoreWidget score={score} />
                 </div>
-            )}
+
+                <div className="lg:col-span-8">
+                    {/* ---- CHART ---- */}
+                    {intel && (
+                        <div className="bg-[#0f172a]/80 backdrop-blur-xl p-8 rounded-[2rem] border border-slate-800 shadow-2xl h-full">
+                            <h2 className="text-xl font-black text-white mb-6 uppercase tracking-tighter italic">Breach Activity by Source</h2>
+                            <div className="h-64">
+                                <ResponsiveContainer>
+                                    <BarChart data={intel.chartData}>
+                                        <XAxis dataKey="source" tick={{ fill: "#64748b", fontSize: 10, fontWeight: "bold" }} axisLine={false} tickLine={false} />
+                                        <YAxis tick={{ fill: "#64748b", fontSize: 10, fontWeight: "bold" }} axisLine={false} tickLine={false} />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: "12px" }}
+                                        />
+                                        <Bar dataKey="breaches" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
 
             {/* ---- HEADLINES ---- */}
-            <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700 shadow-lg">
-                <h2 className="text-xl font-bold text-white mb-4">Latest Breach Headlines</h2>
-
-                {headlines.map((h, idx) => (
-                    <div
-                        key={idx}
-                        className="bg-gray-800 p-4 rounded-xl border border-gray-700"
-                    >
-                        <h3 className="text-lg font-semibold text-white">{h.title}</h3>
-
-                        {/* 🔥 EXPOSURE BADGE */}
-                        {h.exposure && (
-                            <span className="text-red-400 font-bold text-sm block mt-1">
-                                ⚠ Credential Exposure Detected
-                            </span>
-                        )}
-
-                        <p className="text-gray-400 text-sm">{h.source}</p>
-                        <p className="text-gray-500 text-xs mt-1">{h.date}</p>
-
-                        <a
-                            href={h.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-400 underline text-sm mt-2 inline-block"
-                        >
-                            View Source →
-                        </a>
-                    </div>
-                ))}
-                {headlines.length > 0 && (
-                    <div className="mt-4">
+            <div className="bg-[#0f172a]/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-slate-800 shadow-2xl">
+                <div className="flex justify-between items-center mb-8">
+                    <h2 className="text-xl font-black text-white uppercase tracking-tighter italic">Latest Breach Intelligence</h2>
+                    {headlines.length > 0 && (
                         <button
                             onClick={exportCSV}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg mr-2"
+                            className="px-6 py-2 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-500 transition-all"
                         >
-                            Export CSV
+                            Export Intelligence Audit
                         </button>
-                    </div>
-                )}
+                    )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {headlines.map((h, idx) => (
+                        <div
+                            key={idx}
+                            className="bg-black/20 p-6 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all relative overflow-hidden"
+                        >
+                            {h.exposure && <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 blur-3xl"></div>}
+                            <h3 className="text-base font-bold text-white leading-tight">{h.title}</h3>
+
+                            {/* 🔥 EXPOSURE BADGE */}
+                            {h.exposure && (
+                                <div className="mt-3 flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 w-fit">
+                                    <ShieldAlert className="w-3 h-3 text-red-500 animate-pulse" />
+                                    <span className="text-red-400 font-black text-[9px] uppercase tracking-widest">Credential Exposure Detected</span>
+                                </div>
+                            )}
+
+                            <div className="mt-4 flex items-center justify-between">
+                                <span className="text-[10px] font-black text-slate-500 uppercase">{h.source}</span>
+                                <span className="text-[10px] font-mono font-bold text-slate-600">{h.date}</span>
+                            </div>
+
+                            <a
+                                href={h.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-4 flex items-center gap-2 text-blue-500 font-bold text-[10px] uppercase tracking-widest hover:text-blue-400 transition-colors"
+                            >
+                                Investigate Source <ArrowRight className="w-3 h-3" />
+                            </a>
+                        </div>
+                    ))}
+                </div>
             </div>
 
 
             {/* ---- LIVE FEED ---- */}
-            <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700 shadow-lg">
-                <h2 className="text-xl font-bold text-white mb-4">Live Darkweb Activity</h2>
+            <div className="bg-[#0f172a]/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-slate-800 shadow-2xl">
+                <div className="flex items-center gap-3 mb-8">
+                    <div className="w-2 h-2 rounded-full bg-red-500 animate-ping"></div>
+                    <h2 className="text-xl font-black text-white uppercase tracking-tighter italic">Live Darkweb Ingress</h2>
+                </div>
 
                 {liveFeed.length === 0 ? (
-                    <p className="text-gray-400">Waiting for live activity...</p>
+                    <div className="flex flex-col items-center justify-center py-20 opacity-30">
+                        <Activity className="w-12 h-12 text-slate-700 animate-pulse" />
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] mt-4 text-slate-500">Monitoring Encrypted Networks...</p>
+                    </div>
                 ) : (
-                    <div className="space-y-3 max-h-80 overflow-y-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {liveFeed.map((item, idx) => (
                             <div
                                 key={idx}
-                                className="bg-gray-800 p-3 rounded-lg border border-gray-700 text-gray-300"
+                                className="bg-black/40 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between"
                             >
-                                <div className="flex justify-between">
-                                    <span className="font-semibold">{item.source}</span>
-                                    <span className="text-sm text-gray-400">
+                                <div className="flex justify-between items-center mb-4">
+                                    <span className="text-xs font-black text-slate-300 uppercase">{item.source}</span>
+                                    <span className="text-[10px] font-mono font-bold text-slate-600">
                                         {new Date(item.timestamp).toLocaleTimeString()}
                                     </span>
                                 </div>
-                                <p className="text-red-400 font-bold">
-                                    {item.breaches} Breaches Reported
-                                </p>
 
-                                <button onClick={exportCSV} className="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                                    Export CSV
-                                </button>
+                                <div className="p-3 bg-red-500/10 rounded-xl border border-red-500/20 mb-4 text-center">
+                                    <p className="text-lg font-black text-red-400 tracking-tighter leading-none">{item.breaches}</p>
+                                    <p className="text-[9px] font-black text-red-500 uppercase tracking-widest mt-1">Breaches Detected</p>
+                                </div>
 
-                                <button onClick={exportPDF} className="px-4 py-2 bg-red-600 text-white rounded-lg">
-                                    Export PDF
-                                </button>
-
-
-
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button onClick={exportCSV} className="p-2 bg-slate-800/50 hover:bg-slate-800 text-slate-400 font-black text-[9px] uppercase tracking-widest rounded-lg transition-all">
+                                        CSV Audit
+                                    </button>
+                                    <button onClick={exportPDF} className="p-2 bg-slate-800/50 hover:bg-slate-800 text-slate-400 font-black text-[9px] uppercase tracking-widest rounded-lg transition-all">
+                                        PDF Report
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>

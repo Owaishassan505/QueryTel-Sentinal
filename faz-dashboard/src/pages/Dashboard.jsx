@@ -1,301 +1,241 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
+import { motion } from "framer-motion";
 
-// CHARTS
-import SeverityDonut from "../components/charts/SeverityDonut";
-import TrendLineChart from "../components/charts/TrendLineChart";
-import AlertTypesPie from "../components/charts/AlertTypesPie";
-import CountryBarChart from "../components/charts/CountryBarChart";
-import MostActiveDevicesChart from "../components/charts/MostActiveDevicesChart";
-import TopDestinationCountries from "../components/charts/TopDestinationCountries";
+// CHARTS (Lazy Load for Performance)
+const SeverityDonut = React.lazy(() => import("../components/charts/SeverityDonut"));
+const TrendLineChart = React.lazy(() => import("../components/charts/TrendLineChart"));
+const AlertTypesPie = React.lazy(() => import("../components/charts/AlertTypesPie"));
+const CountryBarChart = React.lazy(() => import("../components/charts/CountryBarChart"));
+const MostActiveDevicesChart = React.lazy(() => import("../components/charts/MostActiveDevicesChart"));
+const TopDestinationCountries = React.lazy(() => import("../components/charts/TopDestinationCountries"));
 
 // WIDGETS
 import SystemHealthChips from "../components/widgets/SystemHealthChips";
 import RealTimeThreatList from "../components/widgets/RealTimeThreatList";
-import LiveThreatRadar from "../components/widgets/LiveThreatRadar";
+const LiveThreatRadar = React.lazy(() => import("../components/widgets/LiveThreatRadar"));
 import GlowStatChips from "../components/widgets/GlowStatChips";
 import CategoryCounters from "../components/widgets/CategoryCounters";
 
 // TABLES
 import LogsTableV2 from "../components/tables/LogsTableV2";
 
-// Animation
-import { motion } from "framer-motion";
-import CountUp from "react-countup";
-
-export default function Dashboard({ logs = [], stats = {}, chartData = [] }) {
-
-    /* ===============================
-       LIVE STATE (ADDED – REQUIRED)
-    ================================ */
-    const [liveLogs, setLiveLogs] = useState([]);
-    const [liveStats, setLiveStats] = useState({
-        total: 0,
-        errors: 0,
-        warnings: 0,
-        info: 0,
+export default function Dashboard() {
+    // --- STATE ---
+    const [liveStats, setLiveStats] = useState({});
+    const [statsState, setStatsState] = useState({
+        severity: { critical: 0, high: 0, medium: 0, low: 0 },
+        alertTypes: [],
+        unmitigated: 0, prevented: 0, total: 0, errors: 0, warnings: 0, info: 0
     });
+    const [liveLogs, setLiveLogs] = useState([]);
 
-    const [filteredLogs, setFilteredLogs] = useState([]);
-    const [drawerOpen, setDrawerOpen] = useState(false);
-    const [categoryFilter, setCategoryFilter] = useState(null);
-    const [countryFilter, setCountryFilter] = useState(null);
-    const [topCountries, setTopCountries] = useState([]);
-    const [statsState, setStatsState] = useState({});
+    // Throttling Ref
+    const lastUpdate = useRef(0);
 
-    /* ===============================
-       INITIAL REST FETCH (KEEP)
-    ================================ */
+    // --- INITIAL FETCH ---
     useEffect(() => {
         axios.get("/api/logs/stats")
             .then(res => {
                 const api = res.data;
-
-                const severity = {
-                    critical: api.errors || 0,
-                    high: api.warnings || 0,
-                    medium: api.info || 0,
-                    low: 0,
-                };
-
-                const alertTypes = [
-                    { type: "General", count: api.general || 0 },
-                    { type: "App Control", count: api.application || 0 },
-                    { type: "Antivirus", count: api.antivirus || 0 },
-                    { type: "DNS", count: api.dns || 0 },
-                    { type: "IPS", count: api.ips || 0 },
-                    { type: "SSL", count: api.ssl || 0 },
-                    { type: "Failed Login", count: api.failedLogin || 0 },
-                    { type: "VPN", count: api.vpn || 0 },
-                    { type: "Admin Access", count: api.adminAccess || 0 },
-                ];
-
-                setStatsState({ severity, alertTypes });
+                setStatsState({
+                    severity: {
+                        critical: api.errors || 0,
+                        high: api.warnings || 0,
+                        medium: api.info || 0,
+                        low: 0,
+                    },
+                    alertTypes: [
+                        { type: "Unmitigated", count: api.unmitigated || 0 },
+                        { type: "Prevented", count: api.prevented || 0 },
+                        { type: "General", count: api.general || 0 },
+                        { type: "App Control", count: api.application || 0 },
+                        { type: "Antivirus", count: api.antivirus || 0 },
+                        { type: "DNS", count: api.dns || 0 },
+                        { type: "IPS", count: api.ips || 0 },
+                        { type: "SSL", count: api.ssl || 0 },
+                        { type: "Failed Login", count: api.failedLogin || 0 },
+                        { type: "VPN", count: api.vpn || 0 },
+                        { type: "Admin Access", count: api.adminAccess || 0 },
+                    ],
+                    unmitigated: api.unmitigated || 0,
+                    prevented: api.prevented || 0,
+                    total: api.total || 0,
+                    errors: api.errors || 0,
+                    warnings: api.warnings || 0,
+                    info: api.info || 0
+                });
             })
             .catch(err => console.error("Stats fetch error:", err));
     }, []);
 
-    /* ===============================
-       SOCKET.IO — LIVE ENGINE
-    ================================ */
+    // --- SOCKETS (THROTTLED) ---
     useEffect(() => {
         const socket = io("https://sentinel.itcold.com", {
             transports: ["websocket"],
             reconnection: true,
         });
 
-        // LIVE STATS
         socket.on("stats:update", (s) => {
-            setLiveStats(s);
+            const now = Date.now();
+            if (now - lastUpdate.current > 2000) {
+                lastUpdate.current = now;
 
-            setStatsState(prev => ({
-                ...prev,
-                total: s.total,
-                errors: s.errors,
-                warnings: s.warnings,
-                info: s.info,
-                general: s.general ?? prev.general,
-                application: s.application ?? prev.application,
-                antivirus: s.antivirus ?? prev.antivirus,
-                dns: s.dns ?? prev.dns,
-                ssl: s.ssl ?? prev.ssl,
-                ips: s.ips ?? prev.ips,
-                failedLogin: s.failedLogin ?? prev.failedLogin,
-                vpn: s.vpn ?? prev.vpn,
-                adminAccess: s.adminAccess ?? prev.adminAccess,
+                // Update Live Stats
+                setLiveStats(s);
 
-                severity: {
-                    critical: s.errors || 0,
-                    high: s.warnings || 0,
-                    medium: s.info || 0,
-                    low: 0,
-                }
-            }));
+                // Merge into Main Stats
+                setStatsState(prev => ({
+                    ...prev,
+                    total: s.total,
+                    errors: s.errors,
+                    warnings: s.warnings,
+                    info: s.info,
+                    unmitigated: s.unmitigated ?? prev.unmitigated,
+                    prevented: s.prevented ?? prev.prevented,
+                    severity: {
+                        critical: s.errors || 0,
+                        high: s.warnings || 0,
+                        medium: s.info || 0,
+                        low: 0,
+                    }
+                }));
+            }
         });
 
-        // LIVE LOG STREAM
+        // Live Log Stream (Less frequent throttle needed, but good to batch)
         socket.on("alert:batch", (batch) => {
-            setLiveLogs(prev =>
-                [...batch.reverse(), ...prev].slice(0, 300)
-            );
+            setLiveLogs(prev => [...batch.reverse(), ...prev].slice(0, 50));
         });
 
         return () => socket.disconnect();
     }, []);
 
-    /* ===============================
-       FILTER HANDLERS (UNCHANGED)
-    ================================ */
-    const handleCounterClick = async (key) => {
-        let filter = {};
-
-        if (key === "total") {
-            const res = await axios.post("/api/analysis/filter", {});
-            setFilteredLogs(res.data.results);
-            setDrawerOpen(true);
-            return;
-        }
-
-        if (key === "errors") filter.severity = "error";
-        if (key === "warnings") filter.severity = "warning";
-        if (key === "info") filter.severity = "info";
-
-        const categories = {
-            general: "General Traffic",
-            application: "Application Control",
-            antivirus: "Antivirus",
-            dns: "DNS",
-            ssl: "SSL",
-            ips: "IPS",
-            failedLogin: "Failed Login",
-            vpn: "VPN",
-            adminAccess: "Admin Access",
-        };
-
-        if (categories[key]) filter.category = categories[key];
-
-        const res = await axios.post("/api/analysis/filter", filter);
-        setFilteredLogs(res.data.results);
-        setDrawerOpen(true);
-    };
-
-    const handleCountryFilter = (country) => {
-        axios.post("/api/analysis/filter", { dstCountry: country }).then(res => {
-            setFilteredLogs(res.data.results);
-            setDrawerOpen(true);
-        });
-    };
-
-    const handleCountryBarClick = (country) => {
-        axios.post("/api/analysis/filter", { srcCountry: country }).then(res => {
-            setFilteredLogs(res.data.results);
-            setDrawerOpen(true);
-        });
-    };
-
-
-
-    /* ===============================
-       LOG DRAWER (UNCHANGED)
-    ================================ */
-    const LogDrawer = ({ open, onClose, logs }) => {
-        const [page, setPage] = useState(1);
-        const perPage = 10;
-        if (!open) return null;
-
-        const totalPages = Math.ceil(logs.length / perPage);
-        const start = (page - 1) * perPage;
-        const visible = logs.slice(start, start + perPage);
-
-        return (
-            <div className="fixed inset-0 bg-black/60 flex justify-end z-[9999]">
-                <div className="w-[480px] h-full bg-[#0f0f11] border-l border-gray-800 flex flex-col">
-                    <div className="p-4 border-b border-gray-800 flex justify-between">
-                        <h2 className="text-white font-semibold">
-                            Filtered Logs ({logs.length})
-                        </h2>
-                        <button onClick={onClose} className="text-red-400 text-xl">✕</button>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                        {visible.map((log, i) => (
-                            <div key={i} className="bg-[#1a1a1c] p-4 rounded border border-gray-700">
-                                <div
-                                    className="text-gray-300 text-sm"
-                                    dangerouslySetInnerHTML={{
-                                        __html: log.humanMessage
-                                            ?.replace(/\n/g, "<br>")
-                                            ?.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                                    }}
-                                />
-                                <div className="text-xs text-gray-500 mt-2">
-                                    {log.sourceIp} → {log.destIp}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    /* ===============================
-       TOP COUNTRIES (KEEP)
-    ================================ */
-    useEffect(() => {
-        axios.get("/api/top-countries").then(res => {
-            if (res.data.ok) setTopCountries(res.data.data);
-        });
-    }, []);
-
-
-
-    /* ===============================
-       RENDER
-    ================================ */
+    // --- RENDER ---
     return (
-        <div className="pt-2 pb-4">
-            <GlowStatChips stats={statsState} />
-
-            <div className="grid grid-cols-12 gap-4 mt-6">
-
-                <div className="col-span-12 lg:col-span-6 bg-panel p-4 rounded-xl">
-                    <h2 className="mb-3 font-semibold">Threat Trend</h2>
-                    <TrendLineChart logs={liveLogs} />
+        <div className="min-h-screen bg-gray-900 text-gray-100 font-sans p-6 overflow-x-hidden">
+            <React.Suspense fallback={
+                <div className="flex items-center justify-center h-screen text-cyan-500 animate-pulse">
+                    Loading Dashboard Intelligence...
+                </div>
+            }>
+                {/* 1. TOP BAR: SYSTEM HEALTH */}
+                <div className="mb-6">
+                    <SystemHealthChips />
                 </div>
 
-                <div className="col-span-12 lg:col-span-6 grid grid-cols-12 gap-4">
+                {/* 2. HEADER STATS (GLOW) */}
+                <div className="mb-8">
+                    <GlowStatChips stats={statsState} />
+                </div>
 
-                    <div className="col-span-4 bg-panel p-4 rounded-xl text-center">
-                        <h2 className="mb-2 font-semibold">Alert Types</h2>
-                        <AlertTypesPie data={statsState.alertTypes || []} />
+                {/* 3. MAIN GRID */}
+                <div className="grid grid-cols-12 gap-6 mb-8">
+
+                    {/* LEFT: THREAT DISTRIBUTION (Donut + Pie) */}
+                    <div className="col-span-12 md:col-span-3 space-y-6">
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 shadow-lg backdrop-blur-sm"
+                        >
+                            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-4">Severity Distribution</h3>
+                            <div className="h-64">
+                                <SeverityDonut data={statsState.severity} />
+                            </div>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 shadow-lg backdrop-blur-sm"
+                        >
+                            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-4">Threat Categories</h3>
+                            <div className="h-64">
+                                <AlertTypesPie data={statsState.alertTypes} />
+                            </div>
+                        </motion.div>
                     </div>
 
-                    <div className="col-span-4 bg-panel p-4 rounded-xl text-center">
-                        <h2 className="mb-2 font-semibold">Severity</h2>
-                        <SeverityDonut stats={statsState.severity || {}} />
+                    {/* CENTER: TRENDS + RADAR */}
+                    <div className="col-span-12 md:col-span-6 space-y-6">
+                        {/* Trend Chart */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 shadow-lg backdrop-blur-sm h-96"
+                        >
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider">Traffic & Threat Trends</h3>
+                                <span className="text-cyan-500 text-xs animate-pulse">● Live Ingestion</span>
+                            </div>
+                            <TrendLineChart />
+                        </motion.div>
+
+                        {/* Live Threat Radar (Heavy Widget) */}
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="col-span-2 md:col-span-1">
+                                <LiveThreatRadar />
+                            </div>
+                            <div className="col-span-2 md:col-span-1">
+                                <CategoryCounters />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="col-span-4 bg-panel p-4 rounded-xl text-center">
-                        <h2 className="mb-2 font-semibold text-red-400">Live Threat Radar</h2>
-                        <LiveThreatRadar />
+                    {/* RIGHT: LIVE FEED + ACTIVE DEVICES */}
+                    <div className="col-span-12 md:col-span-3 space-y-6">
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-0 shadow-lg backdrop-blur-sm overflow-hidden flex flex-col h-[600px]"
+                        >
+                            <div className="p-4 border-b border-gray-700/50 bg-gray-800/80">
+                                <h3 className="text-red-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                                    Real-Time Threat Feed
+                                </h3>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-700">
+                                <RealTimeThreatList logs={liveLogs} />
+                            </div>
+                        </motion.div>
                     </div>
-
                 </div>
 
-                <div className="col-span-12 md:col-span-6 bg-panel p-4 rounded-xl">
-                    <h2 className="mb-2 font-semibold">Most Active Devices</h2>
-                    <MostActiveDevicesChart />
+                {/* 4. GEO & DEVICE INTEL */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4"
+                    >
+                        <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-4">Top Source Countries</h3>
+                        <div className="h-64">
+                            <CountryBarChart />
+                        </div>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4"
+                    >
+                        <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-4">Most Active Devices</h3>
+                        <div className="h-64">
+                            <MostActiveDevicesChart />
+                        </div>
+                    </motion.div>
                 </div>
 
-                <div className="col-span-12 md:col-span-6 bg-panel p-4 rounded-xl">
-                    <h2 className="mb-2 font-semibold">Top Destination Countries</h2>
-                    <TopDestinationCountries onSelectCountry={handleCountryFilter} />
+                {/* 5. DATA TABLE */}
+                <div className="bg-gray-800/30 rounded-xl border border-gray-700/30 overflow-hidden">
+                    <LogsTableV2 />
                 </div>
-
-            </div>
-
-            <div className="bg-panel p-4 rounded-xl mt-6">
-                <h2 className="mb-2 font-semibold">Top Countries</h2>
-                <CountryBarChart data={topCountries} onCountrySelect={handleCountryBarClick} />
-            </div>
-
-            <div className="bg-panel p-4 rounded-xl mt-6">
-                <h2 className="mb-2 font-semibold">Latest Logs (LIVE)</h2>
-                <LogsTableV2
-                    logs={liveLogs}
-                    categoryFilter={categoryFilter}
-                    countryFilter={countryFilter}
-                />
-            </div>
-
-            <LogDrawer
-                open={drawerOpen}
-                logs={filteredLogs}
-                onClose={() => setDrawerOpen(false)}
-            />
+            </React.Suspense>
         </div>
     );
 }
-

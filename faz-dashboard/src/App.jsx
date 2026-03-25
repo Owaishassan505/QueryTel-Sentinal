@@ -6,7 +6,6 @@ import ProtectedApp from "./ProtectedApp";
 import Login from "./pages/Login";
 import TwoFA from "./pages/TwoFA";
 import TwoFASetup from "./pages/TwoFASetup";
-import GlobalThreatMap from "./pages/GlobalThreatMap";
 
 export default function App() {
   const [loaded, setLoaded] = useState(false);
@@ -44,8 +43,6 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/2fa" element={<TwoFA />} />
         <Route path="/2fa-setup" element={<TwoFASetup />} />
-        <Route path="/global-map" element={<GlobalThreatMap />} />
-
         {/* PROTECTED ROUTES */}
         <Route
           path="/*"

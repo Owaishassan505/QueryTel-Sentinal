@@ -1,5 +1,10 @@
-const isProd = window.location.hostname === "sentinel.itcold.com";
+const host = window.location.hostname;
+const isLocal = host === "localhost" || host === "127.0.0.1";
 
-export const backendURL = isProd
-    ? "https://sentinel.itcold.com"
-    : "http://127.0.0.1:3320";
+const getBackendURL = () => {
+    if (isLocal) return "http://127.0.0.1:3320";
+    if (host === "sentinel.itcold.com") return "https://sentinel.itcold.com";
+    return `http://${host}:3320`;
+};
+
+export const backendURL = getBackendURL();

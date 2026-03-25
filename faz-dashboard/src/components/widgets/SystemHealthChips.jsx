@@ -32,7 +32,7 @@ export default function SystemHealthChips() {
 
     useEffect(() => {
         fetchHealth();
-        const timer = setInterval(fetchHealth, 5000);
+        const timer = setInterval(fetchHealth, 30000); // 30s interval to reduce server load
         return () => clearInterval(timer);
     }, []);
 

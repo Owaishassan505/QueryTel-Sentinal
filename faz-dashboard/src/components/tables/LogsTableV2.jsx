@@ -192,28 +192,54 @@ export default function LogsTableV2({
 
                                 <div
                                     className="flex-1 text-gray-100 truncate"
-                                    title={log.message}
+                                    title={log.humanMessage || log.message}
                                 >
-                                    {extractReadable(log.raw || log.message)}
+                                    <span className={log.riskLevel === 'CRITICAL' ? 'text-red-400 font-semibold' : ''}>
+                                        {log.humanMessage || log.message || "System Log"}
+                                    </span>
+                                    {log.count > 1 && (
+                                        <span className="ml-2 px-1.5 py-0.5 rounded-md bg-white/10 text-[10px] font-mono text-gray-400 border border-white/5">
+                                            x{log.count.toLocaleString()}
+                                        </span>
+                                    )}
                                 </div>
 
                                 <div className="w-40 text-gray-300">{log.deviceName || "-"}</div>
                                 <div className="w-32 text-gray-300">
                                     {log.sourceIp || log.source_ip || "-"}
                                 </div>
-                                <div className="w-32 text-gray-300">
+                                <div className="w-32 text-gray-300 text-right">
                                     {log.destIp || log.dest_ip || "-"}
                                 </div>
                             </div>
 
                             {isExpanded && (
-                                <div className="bg-black/40 p-4 text-xs text-gray-300">
-                                    <div className="font-semibold text-primary mb-1">
-                                        Raw Log Data
+                                <div className="bg-black/40 p-4 text-xs text-gray-300 border-t border-borderColor/20">
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div>
+                                            <div className="font-semibold text-primary mb-1 uppercase tracking-wider text-[10px]">
+                                                Intelligence Context
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <span className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-500/30">
+                                                    Risk: {log.riskLevel || 'Low'}
+                                                </span>
+                                                <span className="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">
+                                                    Category: {log.category || 'General'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-gray-500 uppercase text-[10px]">First Seen</div>
+                                            <div>{formatTime(log.firstSeen || log.ts)}</div>
+                                        </div>
                                     </div>
 
-                                    <pre className="bg-black/60 p-3 rounded-lg border overflow-auto max-h-64 text-[11px] whitespace-pre-wrap">
-                                        {JSON.stringify(log, null, 2)}
+                                    <div className="font-semibold text-primary mb-1 uppercase tracking-wider text-[10px]">
+                                        Raw Telemetry (Drill-down)
+                                    </div>
+                                    <pre className="bg-black/60 p-3 rounded-lg border border-borderColor/30 overflow-auto max-h-64 text-[11px] font-mono whitespace-pre-wrap text-emerald-400/80">
+                                        {JSON.stringify(log.parsed || log, null, 2)}
                                     </pre>
                                 </div>
                             )}

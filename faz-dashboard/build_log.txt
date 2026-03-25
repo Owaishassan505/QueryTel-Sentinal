@@ -1,0 +1,224 @@
+nohup: ignoring input
+
+> faz-dashboard@0.1.0 build
+> react-scripts build
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+Creating an optimized production build...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+Compiled with warnings.
+
+[eslint] 
+src/ProtectedApp.jsx
+  Line 3:8:     'io' is defined but never used                       no-unused-vars
+  Line 4:18:    'Bell' is defined but never used                     no-unused-vars
+  Line 4:30:    'LayoutGrid' is defined but never used               no-unused-vars
+  Line 4:52:    'ShieldCheck' is defined but never used              no-unused-vars
+  Line 7:8:     'PageWrapper' is defined but never used              no-unused-vars
+  Line 9:10:    'backendURL' is defined but never used               no-unused-vars
+  Line 18:8:    'ErrorLogs' is defined but never used                no-unused-vars
+  Line 138:12:  'sidebarOpen' is assigned a value but never used     no-unused-vars
+  Line 138:25:  'setSidebarOpen' is assigned a value but never used  no-unused-vars
+
+src/components/Copilot/CopilotPanel.jsx
+  Line 5:49:  'Minimize2' is defined but never used  no-unused-vars
+  Line 6:5:   'RotateCcw' is defined but never used  no-unused-vars
+
+src/components/Dashboard/LogModal.jsx
+  Line 2:33:  'AlertCircle' is defined but never used  no-unused-vars
+
+src/components/Logs/LogTable.jsx
+  Line 5:5:     'AlertTriangle' is defined but never used               no-unused-vars
+  Line 7:5:     'XCircle' is defined but never used                     no-unused-vars
+  Line 18:5:    'HelpCircle' is defined but never used                  no-unused-vars
+  Line 19:5:    'Cpu' is defined but never used                         no-unused-vars
+  Line 309:20:  'setSearch' is assigned a value but never used          no-unused-vars
+  Line 310:28:  'setFilterSeverity' is assigned a value but never used  no-unused-vars
+
+src/components/SOC/RiskScoreGauge.jsx
+  Line 2:10:   'Shield' is defined but never used             no-unused-vars
+  Line 2:18:   'AlertTriangle' is defined but never used      no-unused-vars
+  Line 2:33:   'CheckCircle' is defined but never used        no-unused-vars
+  Line 12:11:  'rotation' is assigned a value but never used  no-unused-vars
+
+src/components/layout/PageWrapper.jsx
+  Line 2:8:   'Sidebar' is defined but never used               no-unused-vars
+  Line 5:12:  'sidebarOpen' is assigned a value but never used  no-unused-vars
+
+src/components/layout/Sidebar.jsx
+  Line 1:17:  'useState' is defined but never used  no-unused-vars
+  Line 12:5:  'Terminal' is defined but never used  no-unused-vars
+
+src/index.js
+  Line 5:10:  'initTheme' is defined but never used  no-unused-vars
+
+src/pages/AIThreatInsights.jsx
+  Line 6:28:  'User' is defined but never used  no-unused-vars
+
+src/pages/Analysis.jsx
+  Line 4:81:    'BarChart' is defined but never used                                                                                                                    no-unused-vars
+  Line 4:91:    'Bar' is defined but never used                                                                                                                         no-unused-vars
+  Line 4:96:    'Cell' is defined but never used                                                                                                                        no-unused-vars
+  Line 7:24:    'RotateCw' is defined but never used                                                                                                                    no-unused-vars
+  Line 8:5:     'Search' is defined but never used                                                                                                                      no-unused-vars
+  Line 8:28:    'Calendar' is defined but never used                                                                                                                    no-unused-vars
+  Line 8:38:    'ChevronDown' is defined but never used                                                                                                                 no-unused-vars
+  Line 8:51:    'ChevronUp' is defined but never used                                                                                                                   no-unused-vars
+  Line 9:10:    'Lock' is defined but never used                                                                                                                        no-unused-vars
+  Line 9:54:    'Info' is defined but never used                                                                                                                        no-unused-vars
+  Line 10:5:    'Wifi' is defined but never used                                                                                                                        no-unused-vars
+  Line 10:11:   'Database' is defined but never used                                                                                                                    no-unused-vars
+  Line 10:21:   'Layers' is defined but never used                                                                                                                      no-unused-vars
+  Line 12:18:   'AnimatePresence' is defined but never used                                                                                                             no-unused-vars
+  Line 16:7:    'StatCard' is assigned a value but never used                                                                                                           no-unused-vars
+  Line 46:7:    'SeverityTag' is assigned a value but never used                                                                                                        no-unused-vars
+  Line 72:7:    'ReportSection' is assigned a value but never used                                                                                                      no-unused-vars
+  Line 140:70:  Unnecessary escape character: \-                                                                                                                        no-useless-escape
+  Line 282:12:  'showFilters' is assigned a value but never used                                                                                                        no-unused-vars
+  Line 282:25:  'setShowFilters' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:11:  'totalEvents' is assigned a value but never used                                                                                                        no-unused-vars
+  Line 289:11:  'criticalEvents' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 331:8:   React Hook useEffect has missing dependencies: 'applyFilters', 'fetchSummary', and 'fetchTimeline'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 496:7:   'MetricPill' is assigned a value but never used                                                                                                         no-unused-vars
+  Line 506:7:   'MetricPillSmall' is assigned a value but never used                                                                                                    no-unused-vars
+
+src/pages/AssetIdentity.jsx
+  Line 5:23:  'ShieldCheck' is defined but never used  no-unused-vars
+  Line 6:34:  'AlertCircle' is defined but never used  no-unused-vars
+  Line 7:11:  'HardDrive' is defined but never used    no-unused-vars
+  Line 7:34:  'Laptop' is defined but never used       no-unused-vars
+  Line 8:17:  'List' is defined but never used         no-unused-vars
+
+src/pages/DarkwebIntelligence.jsx
+  Line 165:8:  React Hook useEffect has a missing dependency: 'token'. Either include it or remove the dependency array                                     react-hooks/exhaustive-deps
+  Line 170:8:  React Hook useEffect has missing dependencies: 'fetchHeadlines' and 'fetchIntelligence'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/EarlyWarning.jsx
+  Line 1:51:   'useMemo' is defined but never used    no-unused-vars
+  Line 6:41:   'PieChart' is defined but never used   no-unused-vars
+  Line 6:51:   'Pie' is defined but never used        no-unused-vars
+  Line 11:42:  'Instagram' is defined but never used  no-unused-vars
+
+src/pages/ErrorLogs.jsx
+  Line 40:8:  React Hook useEffect has a missing dependency: 'loadLogs'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/EventExplorer.jsx
+  Line 5:5:    'Clock' is defined but never used                                                                               no-unused-vars
+  Line 53:24:  'setSyncStatus' is assigned a value but never used                                                              no-unused-vars
+  Line 127:8:  React Hook useEffect has a missing dependency: 'fetchEvents'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/EventMonitor.jsx
+  Line 5:5:   'Shield' is defined but never used        no-unused-vars
+  Line 7:5:   'ShieldCheck' is defined but never used   no-unused-vars
+  Line 9:5:   'Clock' is defined but never used         no-unused-vars
+  Line 10:5:  'ExternalLink' is defined but never used  no-unused-vars
+  Line 15:5:  'Target' is defined but never used        no-unused-vars
+  Line 18:5:  'Search' is defined but never used        no-unused-vars
+  Line 28:5:  'Cell' is defined but never used          no-unused-vars
+
+src/pages/GlobalSearch.jsx
+  Line 5:28:  'ShieldCheck' is defined but never used                                                                                no-unused-vars
+  Line 5:59:  'Clock' is defined but never used                                                                                      no-unused-vars
+  Line 38:8:  React Hook useEffect has a missing dependency: 'fetchSearchResults'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 42:8:  React Hook useEffect has a missing dependency: 'fetchSearchResults'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/GlobalThreatMap.jsx
+  Line 6:5:     'ShieldAlert' is defined but never used                                                                                                   no-unused-vars
+  Line 7:5:     'Crosshair' is defined but never used                                                                                                     no-unused-vars
+  Line 7:21:    'AlertCircle' is defined but never used                                                                                                   no-unused-vars
+  Line 7:34:    'TrendingUp' is defined but never used                                                                                                    no-unused-vars
+  Line 8:5:     'ChevronRight' is defined but never used                                                                                                  no-unused-vars
+  Line 8:19:    'Terminal' is defined but never used                                                                                                      no-unused-vars
+  Line 54:15:   'labelsLayer' is assigned a value but never used                                                                                          no-unused-vars
+  Line 180:13:  'timer' is defined but never used                                                                                                         no-unused-vars
+  Line 202:8:   React Hook useEffect has a missing dependency: 'feed'. Either include it or remove the dependency array                                   react-hooks/exhaustive-deps
+  Line 202:9:   React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked  react-hooks/exhaustive-deps
+  Line 208:8:   React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array                               react-hooks/exhaustive-deps
+
+src/pages/Incidents.jsx
+  Line 6:5:     'Clock' is defined but never used                                                                                  no-unused-vars
+  Line 7:5:     'User' is defined but never used                                                                                   no-unused-vars
+  Line 8:5:     'FileText' is defined but never used                                                                               no-unused-vars
+  Line 11:5:    'Filter' is defined but never used                                                                                 no-unused-vars
+  Line 29:5:    'Legend' is defined but never used                                                                                 no-unused-vars
+  Line 47:12:   'loadingDetails' is assigned a value but never used                                                                no-unused-vars
+  Line 125:8:   React Hook useEffect has a missing dependency: 'fetchIncidents'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 149:11:  'STATUS_COLORS' is assigned a value but never used                                                                 no-unused-vars
+
+src/pages/InfoLogs.jsx
+  Line 40:8:  React Hook useEffect has a missing dependency: 'loadLogs'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/Login.jsx
+  Line 4:47:  'Server' is defined but never used  no-unused-vars
+
+src/pages/MitreCoverage.jsx
+  Line 6:5:     'Info' is defined but never used                                                                                                                                                       no-unused-vars
+  Line 8:5:     'Calendar' is defined but never used                                                                                                                                                   no-unused-vars
+  Line 12:5:    'Search' is defined but never used                                                                                                                                                     no-unused-vars
+  Line 13:5:    'Filter' is defined but never used                                                                                                                                                     no-unused-vars
+  Line 223:37:  Using target="_blank" without rel="noreferrer" (which implies rel="noopener") is a security risk in older browsers: see https://mathiasbynens.github.io/rel-noopener/#recommendations  react/jsx-no-target-blank
+
+src/pages/ModernDashboard.jsx
+  Line 19:7:   'StatCard' is assigned a value but never used                                                                      no-unused-vars
+  Line 40:12:  'loading' is assigned a value but never used                                                                       no-unused-vars
+  Line 42:12:  'currentTime' is assigned a value but never used                                                                   no-unused-vars
+  Line 244:8:  React Hook useEffect has a missing dependency: 'fetchTrendData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/NetworkTrafficAnalysis.jsx
+  Line 121:8:   React Hook useCallback has missing dependencies: 'buildParams' and 'headers'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 123:38:  React Hook useEffect has a missing dependency: 'fetchAll'. Either include it or remove the dependency array                       react-hooks/exhaustive-deps
+
+src/pages/SOCDashboard.jsx
+  Line 4:5:    'ShieldAlert' is defined but never used    no-unused-vars
+  Line 4:18:   'AlertTriangle' is defined but never used  no-unused-vars
+  Line 4:33:   'Users' is defined but never used          no-unused-vars
+  Line 4:40:   'HardDrive' is defined but never used      no-unused-vars
+  Line 5:11:   'LayoutGrid' is defined but never used     no-unused-vars
+  Line 5:30:   'Target' is defined but never used         no-unused-vars
+  Line 6:5:    'TrendingUp' is defined but never used     no-unused-vars
+  Line 6:17:   'Shield' is defined but never used         no-unused-vars
+  Line 7:18:   'Filter' is defined but never used         no-unused-vars
+  Line 12:5:   'BarChart' is defined but never used       no-unused-vars
+  Line 12:15:  'Bar' is defined but never used            no-unused-vars
+
+src/pages/Tickets.jsx
+  Line 11:5:   'Clock' is defined but never used                                                                                no-unused-vars
+  Line 16:5:   'MoreVertical' is defined but never used                                                                         no-unused-vars
+  Line 27:12:  'totalTickets' is assigned a value but never used                                                                no-unused-vars
+  Line 61:8:   React Hook useEffect has a missing dependency: 'fetchTickets'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/TwoFASetup.jsx
+  Line 7:11:  'email' is assigned a value but never used  no-unused-vars
+
+src/pages/WarningLogs.jsx
+  Line 44:8:  React Hook useEffect has a missing dependency: 'loadLogs'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/utils/SmartLogAnalyzer.js
+  Line 23:11:  'port' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  369.23 kB (+760 B)  build/static/js/main.f17ccb01.js
+  20.68 kB (+42 B)    build/static/css/main.23d0c82d.css
+  1.08 kB             build/static/js/745.def232a3.chunk.js
+  971 B               build/static/js/18.255c60a4.chunk.js
+  857 B               build/static/js/913.b213e4d5.chunk.js
+  754 B               build/static/js/954.262db757.chunk.js
+  748 B               build/static/js/87.f565fe93.chunk.js
+  713 B               build/static/js/16.7bfdc5b5.chunk.js
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+

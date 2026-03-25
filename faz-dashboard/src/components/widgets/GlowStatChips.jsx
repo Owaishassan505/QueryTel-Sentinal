@@ -3,7 +3,10 @@ import CountUp from "react-countup";
 
 export default function CategoryCounters({ stats = {}, onSelect }) {
     const chips = [
-        { key: "total", label: "Total Alerts", color: "from-red-500 to-red-700 shadow-red-500/40" },
+        { key: "unmitigated", label: "Unmitigated Threats", color: "from-red-600 to-black border border-red-500/50 shadow-red-600/60" },
+        { key: "prevented", label: "Threats Blocked", color: "from-emerald-600 to-emerald-900 shadow-emerald-600/40" },
+
+        { key: "total", label: "Total Alerts", color: "from-slate-700 to-slate-900 shadow-slate-500/20" },
         { key: "errors", label: "Errors", color: "from-red-600 to-red-800 shadow-red-600/40" },
         { key: "warnings", label: "Warnings", color: "from-yellow-500 to-yellow-700 shadow-yellow-500/40" },
         { key: "info", label: "Info", color: "from-blue-500 to-blue-700 shadow-blue-500/40" },
